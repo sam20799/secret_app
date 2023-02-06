@@ -1,3 +1,4 @@
+require('dotenv').config()                  // require this at top of your app.it will keep your passwords, API KEYS and secrets inside (.env) hidden when pushed to github
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
@@ -7,6 +8,8 @@ mongoose.set('strictQuery', true);
 const encrypt = require("mongoose-encryption");
 
 const app = express();
+
+//sconsole.log(process.env.SECRET);                           // this is how you can access particular key from env variable
 
 app.use(express.static("public"));
 app.set('view engine','ejs');
@@ -27,9 +30,14 @@ const userSchema = new Schema({
     password: String
 });
 
-const secret = "Thisisourlittlesecret.";                                           // we made our own key for encryption
-userSchema.plugin(encrypt, { secret: secret, encryptedFields: ['password']});       // this should be always above you mongoose model
+ // we made our own key for encryption stored in env variable 
+userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ['password']});      
 
+// process.env.SECRET bcz we inserted our key in env variable file this is how we can access it from there
+// now when we push our code to github inside .gitignore we'll add our env file
+// 
+
+// this should be always above you mongoose model
 // here we used encrypt plugin and give our own key to addn encryption we only added encryption in password if we want to add more items just add that item name as string inside encryption field array
 // how encryption works is at .save it encrypts the data and at .find it decrypts the data so even you pass is encrypted if you log it inside you .find() you will get exact password without encryption
 // now new users once register in you database their passwords will be saved as long bin data no one can even understand what that item is
