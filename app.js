@@ -5,7 +5,7 @@ const ejs = require("ejs");
 const mongoose = require("mongoose");
 const mongoDB = "mongodb://127.0.0.1:27017/userDB";
 mongoose.set('strictQuery', true);
-const encrypt = require("mongoose-encryption");
+const md5 = require("md5");                          // using md5 for encryption it uses hash function and converts you password into hash which it irreversible this hash will never turned back to original password || so we'll now storing hash during register and in login we'll compare hash
 
 const app = express();
 
@@ -30,17 +30,6 @@ const userSchema = new Schema({
     password: String
 });
 
- // we made our own key for encryption stored in env variable 
-userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ['password']});      
-
-// process.env.SECRET bcz we inserted our key in env variable file this is how we can access it from there
-// now when we push our code to github inside .gitignore we'll add our env file
-// 
-
-// this should be always above you mongoose model
-// here we used encrypt plugin and give our own key to addn encryption we only added encryption in password if we want to add more items just add that item name as string inside encryption field array
-// how encryption works is at .save it encrypts the data and at .find it decrypts the data so even you pass is encrypted if you log it inside you .find() you will get exact password without encryption
-// now new users once register in you database their passwords will be saved as long bin data no one can even understand what that item is
 
 const User = mongoose.model("user",userSchema);
 
@@ -62,7 +51,7 @@ app.get("/register", function(req,res){
 app.post("/register",function(req,res){                      // from register page collecting new user email and pass in database
     const newUser = User({
         email: req.body.username,
-        password: req.body.password
+        password: md5(req.body.password)                   // converted pass from user into a hash by using md5 hash function now as password hash will be stored in database
     });
 
     newUser.save(function(err){
@@ -77,7 +66,7 @@ app.post("/register",function(req,res){                      // from register pa
 
 app.post("/login", function(req,res){
     const username = req.body.username;                         // current given email
-    const password = req.body.password;                         //current given pass
+    const password = md5(req.body.password);                        // at loing we converted pass into hash and comparing it with previous stored hash for same email 
 
     User.findOne({email: username},function(err,foundUser){
         if(err){
