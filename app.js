@@ -39,7 +39,8 @@ const {Schema} = mongoose;                         // we wrote proper way to des
 
 const userSchema = new Schema({
     email: String,
-    password: String
+    password: String,
+    secret: String
 });
 
 userSchema.plugin(passportLocalMongoose);                     //plugin is to hash and salt our password
@@ -66,11 +67,44 @@ app.get("/register", function(req,res){
 });
 
 app.get("/secrets",function(req,res){                     // in here we check whether an user is havig active session if so then render secrete page else send them to login page
-    if(req.isAuthenticated()){
-        res.render("secrets");
+    
+    User.find({ "secret": { $ne: null}}, function(err,foundUsers){                                 // this code will look into all users in our database and look into secret field and pickout those users whos secret field is not null i.e those users who posted any secrets
+        if (err){
+            console.log(err);
+        }else{
+            if(foundUsers){
+                res.render("secrets", {usersWithSecrets: foundUsers});
+            }
+        }
+    });               
+    
+});
+
+app.get("/submit", function(req,res){                    // bcz in secrete page we'hv submit button who sends us to /submit route
+    if(req.isAuthenticated()){                           //if they have active connection then render submit page else redirect to login route
+        res.render("submit");
     }else{
         res.redirect("/login")
     }
+});
+
+app.post("/submit",function(req,res){                   // once user render submit page by above process now we'll store user text written inside submit page
+    const submittedSecrete = req.body.secret;          // in submit html page we're sending written text from from post methode and text name is secrete so we rendered that text here
+    console.log(req.user);                             // okay so how do i know in which user we need to save this text so passport has an active session so req.user will tell current user's username.
+    
+    User.findById(req.user.id, function(err, foundUser){
+        if(err){
+            console.log(err);
+        }else{
+            if(foundUser){
+                foundUser.secret = submittedSecrete;
+                foundUser.save(function(){
+                    res.redirect("/secrets");
+                });
+            }
+        }
+    });
+
 });
 
 app.get("/logout", function(req,res){                       //once user click on logout in html logout button will send user to  /logout route (don't look for logout page cuz button send it to route) 
