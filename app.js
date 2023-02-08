@@ -3,7 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
-const mongoDB = "mongodb://127.0.0.1:27017/userDB";
+const mongoDB = "mongodb+srv://SAM:Janu%401234@cluster0.vmpoy7o.mongodb.net/userDB?retryWrites=true&w=majority";
 mongoose.set('strictQuery', true);
 const session = require("express-session");
 const passport = require("passport");
